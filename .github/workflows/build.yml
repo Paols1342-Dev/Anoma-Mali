@@ -13,14 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Android NDK
-        uses: android-actions/setup-ndk@v3
-        with:
-          ndk-version: r25c
+      - name: Install Android NDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk-build-tools
 
       - name: Build Shared Library (.so)
         run: |
-          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang \
+          NDK_PATH=$ANDROID_HOME/ndk-bundle
+          if [ ! -d "$NDK_PATH" ]; then
+            NDK_PATH=$(ls -d $ANDROID_HOME/ndk/* 2>/dev/null | tail -n 1)
+          fi
+          $NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang \
           -shared -fPIC -O3 \
           Anoma_Mali.c \
           -Iumd \
