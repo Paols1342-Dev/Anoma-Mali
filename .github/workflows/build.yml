@@ -11,25 +11,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up Android NDK
-      uses: ndk-ndk/setup-ndk@v1
-      with:
-        ndk-version: r25c
+      - name: Set up Android NDK
+        uses: android-actions/setup-ndk@v3
+        with:
+          ndk-version: r25c
 
-    - name: Build Shared Library (.so)
-      run: |
-        $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang \
-        -shared -fPIC -O3 \
-        Anoma_Mali.c \
-        -Iumd \
-        -o libanoma_mali.so \
-        -lvulkan
+      - name: Build Shared Library (.so)
+        run: |
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android29-clang \
+          -shared -fPIC -O3 \
+          Anoma_Mali.c \
+          -Iumd \
+          -o libanoma_mali.so \
+          -lvulkan
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: libanoma_mali.so
-        path: libanoma_mali.so
-        
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libanoma_mali.so
+          path: libanoma_mali.so
+          
