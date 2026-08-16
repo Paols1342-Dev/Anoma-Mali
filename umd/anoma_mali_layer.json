@@ -1,0 +1,14 @@
+{
+  "file_format_version": "1.0.0",
+  "layer": {
+    "name": "VK_LAYER_ANOMA_MALI_optimization",
+    "type": "GLOBAL",
+    "library_path": "./libanoma_mali.so",
+    "api_version": "1.2.0",
+    "implementation_version": "1",
+    "description": "Anoma-Mali Custom UMD Layer for Mali-G52 Extensions Injection",
+    "functions": {
+      "vkEnumerateDeviceExtensionProperties": "AnomaMali_EnumerateDeviceExtensionProperties"
+    }
+  }
+}
