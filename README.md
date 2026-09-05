@@ -11,6 +11,7 @@
 Do NOT download,copy links or enter links from YouTube,Telegram or other platforms outside of github,if you want the official DEV channel it Is on Github only. 
 ## 🌟 Key Features
 - **Based on Mesa 25.0.7:** Packed with the latest CPU overhead reductions and Zink optimizations.
+- **Update on mesa** now we are based on Mesa 26.0.3 devel.
 - **Mali Optimized:** Better shader compilation (NIR) and improved stability over stock drivers.
 - **Universal Zink Backend:** Translates OpenGL calls straight into Vulkan for your Mali GPU.
 
