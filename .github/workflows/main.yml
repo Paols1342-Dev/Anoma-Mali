@@ -10,21 +10,27 @@ jobs:
 
       - name: Installa i compilatori base
         run: |
-          sudo apt-get update -y && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
+          sudo apt-get update -y && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config wget curl
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Scarica ed Estrai le librerie target (Opzione 2)
+      - name: Scarica ed Estrai le librerie target (Forzato)
         run: |
           mkdir -p sysroot
           
-          # Scarichiamo i file .deb reali dai mirror stabili del Kernel Linux
-          wget -q https://kernel.org
-          wget -q https://kernel.org
-          wget -q https://kernel.org
-          wget -q https://kernel.org
+          # Usiamo curl simulando un browser reale (User-Agent) per evitare rifiuti dal server
+          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libdrm2.deb
+          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libdrm-dev.deb
+          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libgbm1.deb
+          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libgbm-dev.deb
+          
+          # Controlliamo se i file esistono davvero prima di estrarre
+          ls -l *.deb
           
           # Estraiamo tutti i pacchetti scaricati dentro la sysroot locale per Meson
-          for f in *.deb; do dpkg-deb -x "$f" sysroot; done
+          dpkg-deb -x libdrm2.deb sysroot
+          dpkg-deb -x libdrm-dev.deb sysroot
+          dpkg-deb -x libgbm1.deb sysroot
+          dpkg-deb -x libgbm-dev.deb sysroot
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
