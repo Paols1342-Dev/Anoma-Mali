@@ -11,21 +11,15 @@ jobs:
       - name: Installa i compilatori e il Sysroot ARM64 ufficiale
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config unzip
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Scarica Mesa senza caratteri speciali
-        run: |
-          # Questo testo strano è semplicemente il link dello ZIP convertito in sole lettere e numeri
-          CODICE="aHR0cHM6Ly9naXRodWIuY29tL21lc2EzZC9tZXNhL2FyY2hpdmUvcmVmcy9oZWFkcy9tYWluLnppcA=="
-          
-          # Decodifichiamo il link al volo nella memoria di Linux
-          LINK=$(echo "$CODICE" | base64 --decode)
-          
-          # Scarichiamo e scompattiamo Mesa
-          curl -L "$LINK" -o mesa.zip
-          unzip -q mesa.zip
-          mv mesa-main mesa-src
+      - name: Scarica sorgenti
+        uses: actions/checkout@v4
+        with:
+          repository: 'mesa3d/mesa'
+          path: 'mesa-src'
+          depth: 1
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
@@ -87,4 +81,5 @@ jobs:
           name: driver-panvk-sbloccato
           path: |
             mesa-src/build/src/panfrost/vulkan/libvulkan_panfrost.so
-            mesa
+            mesa-src/build/src/panfrost/vulkan/meta.json
+            
