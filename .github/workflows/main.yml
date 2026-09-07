@@ -11,7 +11,6 @@ jobs:
       - name: Installa i compilatori e il Sysroot ARM64 ufficiale
         run: |
           sudo apt-get update -y
-          # Installiamo i compilatori e l'ambiente completo multiarch-support nativo di Ubuntu
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
