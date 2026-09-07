@@ -16,8 +16,10 @@ jobs:
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
-          # Usiamo il mirror ufficiale interno a GitHub così non usciamo dai loro server e azzeriamo l'errore 418
-          git clone --depth 1 https://github.com mesa-src
+          git clone --depth 1 \
+          https://github.com \
+          mesa3d/mesa.git \
+          mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
@@ -27,7 +29,6 @@ jobs:
         run: |
           cd mesa-src
           
-          # Usiamo le librerie di sviluppo incluse direttamente nel cross-compilatore GCC
           SYSROOT_PATH="/usr/aarch64-linux-gnu"
           
           echo "[binaries]" > cross-aarch64.txt
