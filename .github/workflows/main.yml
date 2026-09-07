@@ -13,11 +13,9 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako
 
-      - name: Scarica i sorgenti ufficiali di Mesa (Camuffato)
+      - name: Clona Mesa dal Mirror ufficiale di GitHub
         run: |
-          wget --user-agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)" --max-redirect=20 https://freedesktop.org
-          tar -xzf mesa-main.tar.gz
-          mv mesa-main mesa-src
+          git clone --depth 1 https://github.com mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
