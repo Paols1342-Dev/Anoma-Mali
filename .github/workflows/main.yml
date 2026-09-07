@@ -17,11 +17,17 @@ jobs:
             glslang-tools \
             ninja-build \
             pkg-config
-          sudo pip install meson==1.4.0 pkgconfig
+            sudo pip install meson==1.4.0 pkgconfig
+                    
 
-          - name: Scarica sorgenti
-          run: |
-           git clone --depth 1 https://github.com mesa-src
+      - name: Scarica sorgenti
+        run: |
+          A="https://github.com"
+          B="/mesa3d/mesa.git"
+          git clone --depth 1 "${A}${B}" mesa-src
+          
+          
+          
           
           
         
