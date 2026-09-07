@@ -1,15 +1,14 @@
 name: Compila Mesa Mali-G52
 on: [push, workflow_dispatch]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-            - name: Checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v4
-        - name: Strumenti build
-        run: |
-          sudo apt-get update -y
-        
+
+      - name: Strumenti build
         run: |
           sudo apt-get update -y
           sudo apt-get install -y \
@@ -19,11 +18,11 @@ jobs:
             ninja-build \
             pkg-config
           sudo pip install meson==1.4.0 pkgconfig
-        - name: Scarica sorgenti
+
+      - name: Scarica sorgenti
         run: |
-         
-         git clone --depth 1 ../../mesa3d/mesa mesa-src
-        
+          git clone --depth 1 ../../mesa3d/mesa mesa-src
+
       - name: Sblocca codice
         run: |
           SRC="mesa-src/src/panfrost/vulkan"
@@ -43,7 +42,7 @@ jobs:
           echo "pkg_config_libdir = '$ROOT/lib/pkgconfig'" >> cross.txt
           echo "sys_root = '$ROOT'" >> cross.txt
           
-          echo "[host_machine]" >> cross-txt
+          echo "[host_machine]" >> cross.txt
           echo "system = 'linux'" >> cross.txt
           echo "cpu_family = 'aarch64'" >> cross.txt
           echo "cpu = 'armv8-a'" >> cross.txt
