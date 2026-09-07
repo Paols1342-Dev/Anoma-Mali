@@ -1,6 +1,5 @@
 name: Compila Mesa Mali-G52
 on: [push, workflow_dispatch]
-
 jobs:
   build:
     runs-on: ubuntu-latest
