@@ -15,7 +15,7 @@ jobs:
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
-          git clone --depth 1 https://github.com mesa-src
+          git clone --depth 1 https://github.com/mesa3d/mesa.git mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
