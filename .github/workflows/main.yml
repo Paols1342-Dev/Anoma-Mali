@@ -1,0 +1,74 @@
+name: Compila Mesa Sbloccato per Mali-G52
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Controlla i file del tuo repository
+        uses: actions/checkout@v4
+
+      - name: Installa i compilatori e le dipendenze
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako
+
+      - name: Scarica i sorgenti ufficiali di Mesa (Tarball)
+        run: |
+          wget --no-check-certificate https://freedesktop.org
+          tar -xzf mesa-main.tar.gz
+          mv mesa-main mesa-src
+
+      - name: Sovrascrivi il file con il tuo codice sbloccato
+        run: |
+          cp panvk_device.c mesa-src/src/panfrost/vulkan/panvk_device.c
+
+      - name: Configura e Compila il driver (.so)
+        run: |
+          cd mesa-src
+          echo "[binaries]" > cross-aarch64.txt
+          echo "c = 'aarch64-linux-gnu-gcc'" >> cross-aarch64.txt
+          echo "cpp = 'aarch64-linux-gnu-g++'" >> cross-aarch64.txt
+          echo "[host_machine]" >> cross-aarch64.txt
+          echo "system = 'linux'" >> cross-aarch64.txt
+          echo "cpu_family = 'aarch64'" >> cross-aarch64.txt
+          echo "cpu = 'armv8-a'" >> cross-aarch64.txt
+          echo "endian = 'little'" >> cross-aarch64.txt
+          
+          meson setup build/ --cross-file cross-aarch64.txt -Dvulkan-drivers=panfrost -Dgallium-drivers= -Dplatforms=android
+          ninja -C build/ src/panfrost/vulkan/libvulkan_panfrost.so
+
+      - name: Genera automaticamente il file meta.json (Logica Batch)
+        run: |
+          cd mesa-src/build/src/panfrost/vulkan/
+          echo '{' > meta.json
+          echo '  "schema_version": 1,' >> meta.json
+          echo '  "name": "Panfrost Mesa Devel",' >> meta.json
+          echo '  "version": "26.3.0",' >> meta.json
+          echo '  "description": "Custom compiled Panfrost & PanVK driver for Mali-G52",' >> meta.json
+          echo '  "author": "Paolo1342-Dev",' >> meta.json
+          echo '  "api": "vulkan",' >> meta.json
+          echo '  "driverFile": "libvulkan_panfrost.so",' >> meta.json
+          echo '  "gpuVendor": "arm",' >> meta.json
+          echo '  "customDriverFeatures": [' >> meta.json
+          echo '    "VK_KHR_timeline_semaphore",' >> meta.json
+          echo '    "VK_EXT_descriptor_indexing",' >> meta.json
+          echo '    "VK_EXT_robustness2",' >> meta.json
+          echo '    "VK_EXT_vertex_attribute_divisor",' >> meta.json
+          echo '    "VK_EXT_conditional_rendering",' >> meta.json
+          echo '    "VK_EXT_conservative_rasterization",' >> meta.json
+          echo '    "VK_EXT_extended_dynamic_state",' >> meta.json
+          echo '    "VK_EXT_extended_dynamic_state2",' >> meta.json
+          echo '    "VK_EXT_shader_demote_to_helper_invocation",' >> meta.json
+          echo '    "VK_KHR_shader_float16_int8"' >> meta.json
+          echo '  ]' >> meta.json
+          echo '}' >> meta.json
+
+      - name: Carica il pacchetto pronto da scaricare (Driver + JSON)
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver-panvk-sbloccato
+          path: |
+            mesa-src/build/src/panfrost/vulkan/libvulkan_panfrost.so
+            mesa-src/build/src/panfrost/vulkan/meta.json
+            
