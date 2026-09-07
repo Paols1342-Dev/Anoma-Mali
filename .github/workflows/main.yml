@@ -10,19 +10,21 @@ jobs:
 
       - name: Installa i compilatori e scarica le librerie target
         run: |
-          # 1. Installiamo i compilatori principali e pkg-config
-          sudo apt-get update -y
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
+          # 1. Installiamo solo i compilatori PC nativi (questi non falliscono mai)
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build
           sudo pip install meson==1.4.0 pkgconfig
           
-          # 2. Creiamo una cartella pulita per i pacchetti dello smartphone
+          # 2. Creiamo le cartelle per la nostra sysroot locale isolata
           mkdir -p debs sysroot
           cd debs
           
-          # 3. Scarichiamo i pacchetti ufficiali per ARM64 in modo nativo e sicuro
-          apt-get download libdrm-dev:arm64 libdrm2:arm64 libgbm-dev:arm64 libgbm1:arm64
+          # 3. Scarichiamo i file .deb reali e immutabili direttamente con wget (NO APT = NO ERRORE 100)
+          wget http://ubuntu.com
+          wget http://ubuntu.com
+          wget http://ubuntu.com
+          wget http://ubuntu.com
           
-          # 4. Estraiamo tutti i pacchetti dentro la nostra cartella sysroot locale
+          # 4. Estraiamo tutto dentro la nostra cartella sysroot locale
           for f in *.deb; do dpkg-deb -x "$f" ../sysroot; done
           cd ..
 
