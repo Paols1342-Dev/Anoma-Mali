@@ -8,25 +8,28 @@ jobs:
       - name: Controlla i file del tuo repository
         uses: actions/checkout@v4
 
-      - name: Installa i compilatori e le dipendenze
+      - name: Installa i compilatori e scarica le librerie target
         run: |
-          sudo dpkg --add-architecture arm64
+          # 1. Installiamo solo i compilatori base (quelli non falliscono mai)
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build
+          sudo pip install meson==1.4.0 pkgconfig
           
-          # Svuota e ripulisce completamente TUTTI i vecchi file di configurazione dei repository
-          sudo rm -f /etc/apt/sources.list
-          sudo rm -f /etc/apt/sources.list.d/*
+          # 2. Creiamo una cartella isolata per le librerie dello smartphone
+          mkdir -p sysroot/usr/lib/aarch64-linux-gnu
+          mkdir -p sysroot/usr/include
+          mkdir -p sysroot/usr/share/pkgconfig
           
-          # Configura da zero il file unico per PC (amd64) sui server standard
-          echo -e "Types: deb\nURIs: http://ubuntu.com http://ubuntu.com\nSuites: noble noble-updates noble-backports noble-security\nComponents: main universe restricted multiverse\nArchitectures: amd64" | sudo tee /etc/apt/sources.list.d/amd64.sources
+          # 3. Scarichiamo direttamente i file .deb estratti dai server ufficiali Ubuntu Ports senza usare apt update
+          cd sysroot
+          curl -LO http://ubuntu.com
+          curl -LO http://ubuntu.com
+          curl -LO http://ubuntu.com
+          curl -LO http://ubuntu.com
           
-          # Configura da zero il file unico per lo Smartphone (arm64) sui server Ports
-          echo -e "Types: deb\nURIs: http://ubuntu.com\nSuites: noble noble-updates noble-backports noble-security\nComponents: main universe restricted multiverse\nArchitectures: arm64" | sudo tee /etc/apt/sources.list.d/arm64.sources
-          
-          sudo apt-get update -y
-          sudo apt-get install -y meson ninja-build pkg-config gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools
-          sudo apt-get install -y libdrm-dev:arm64 libgbm-dev:arm64 libx11-dev:arm64 libxrandr-dev:arm64
-          sudo pip install meson==1.4.0
-        
+          # Extrariamo i file direttamente nella nostra cartella di lavoro
+          for f in *.deb; do dpkg-deb -x "$f" .; done
+          cd ..
+
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
           git clone --depth 1 https://freedesktop.org mesa-src
@@ -38,13 +41,19 @@ jobs:
       - name: Configura e Compila il driver (.so)
         run: |
           cd mesa-src
+          
+          # Troviamo il percorso assoluto della nostra sysroot finta
+          SYSROOT_PATH="${{ github.workspace }}/sysroot"
+          
           echo "[binaries]" > cross-aarch64.txt
           echo "c = 'aarch64-linux-gnu-gcc'" >> cross-aarch64.txt
           echo "cpp = 'aarch64-linux-gnu-g++'" >> cross-aarch64.txt
           echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
           
           echo "[properties]" >> cross-aarch64.txt
-          echo "pkg_config_libdir = '/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig'" >> cross-aarch64.txt
+          # Forziamo Meson a leggere SOLO i nostri file pkgconfig appena scaricati, ignorando il sistema
+          echo "pkg_config_libdir = '$SYSROOT_PATH/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT_PATH/usr/share/pkgconfig'" >> cross-aarch64.txt
+          echo "sys_root = '$SYSROOT_PATH'" >> cross-aarch64.txt
           
           echo "[host_machine]" >> cross-aarch64.txt
           echo "system = 'linux'" >> cross-aarch64.txt
@@ -52,6 +61,11 @@ jobs:
           echo "cpu = 'armv8-a'" >> cross-aarch64.txt
           echo "endian = 'little'" >> cross-aarch64.txt
 
+          # Compiliamo puntando alla cartella locale passandogli i flag di inclusione corretti
+          export CFLAGS="-I$SYSROOT_PATH/usr/include"
+          export CPPFLAGS="-I$SYSROOT_PATH/usr/include"
+          export LDFLAGS="-L$SYSROOT_PATH/usr/lib/aarch64-linux-gnu"
+          
           meson setup build/ --cross-file cross-aarch64.txt -Dvulkan-drivers=panfrost -Dgallium-drivers= -Dplatforms=android
           ninja -C build/ src/panfrost/vulkan/libvulkan_panfrost.so
 
