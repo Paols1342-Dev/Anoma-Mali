@@ -12,7 +12,12 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako
-           sudo pip install meson==1.4.0
+          sudo pip install meson==1.4.0
+          - name: Installa i compilatori e le dipendenze
+  run: |
+    sudo apt-get update -y
+    sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako pkg-config cmake libglslang-dev libdrm-dev:arm64 libglvnd-dev:arm64
+    sudo pip install meson==1.4.0
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
           git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
