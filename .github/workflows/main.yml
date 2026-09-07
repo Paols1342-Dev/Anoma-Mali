@@ -13,7 +13,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako
 
-      - name: Clona Mesa dal Mirror ufficiale di GitHub
+      - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
           git clone --depth 1 https://github.com mesa-src
 
