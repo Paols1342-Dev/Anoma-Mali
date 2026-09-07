@@ -11,7 +11,12 @@ jobs:
       - name: Installa i compilatori e le dipendenze
         run: |
           sudo dpkg --add-architecture arm64
+          
+          # Isola i repository PC (amd64) ed elimina i conflitti
           sudo sed -i 's/deb http/deb [arch=amd64] http/g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo sed -i 's/deb-src http/deb-src [arch=amd64] http/g' /etc/apt/sources.list.d/ubuntu.sources
+          
+          # Crea il file sorgenti pulito per i pacchetti ARM64 su Ubuntu Ports
           echo -e "Types: deb\nURIs: http://ubuntu.com\nSuites: noble noble-updates noble-backports noble-security\nComponents: main universe restricted multiverse\nArchitectures: arm64" | sudo tee /etc/apt/sources.list.d/arm64.sources
           
           sudo apt-get update -y
