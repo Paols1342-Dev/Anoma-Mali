@@ -18,18 +18,11 @@ jobs:
             ninja-build \
             pkg-config
           sudo pip install meson==1.4.0 pkgconfig
-
       - name: Scarica sorgenti
-        run: |
-          # Usiamo tarball diretto diviso su più righe corte
-          URL="https://github.com"
-          URL="${URL}/mesa3d/mesa"
-          URL="${URL}/tarball/main"
-          
-          mkdir mesa-src
-          curl -sL "$URL" -o mesa.tar.gz
-          tar -xzf mesa.tar.gz -C mesa-src --strip-components=1
-
+         run: |
+         
+         git clone --depth 1 ../../mesa3d/mesa mesa-src
+        
       - name: Sblocca codice
         run: |
           SRC="mesa-src/src/panfrost/vulkan"
