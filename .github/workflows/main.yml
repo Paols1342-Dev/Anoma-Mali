@@ -19,9 +19,13 @@ jobs:
             pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Scarica sorgenti
-        run: |
-          git clone --depth 1 ../../mesa3d/mesa mesa-src
+          - name: Scarica sorgenti
+          run: |
+           git clone --depth 1 https://github.com mesa-src
+          
+          
+        
+  
 
       - name: Sblocca codice
         run: |
