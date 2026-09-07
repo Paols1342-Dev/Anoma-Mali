@@ -10,12 +10,12 @@ jobs:
 
       - name: Installa i compilatori e le dipendenze
         run: |
+          sudo dpkg --add-architecture arm64
           sudo apt-get update -y
-          sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu \
-            libdrm-dev libgbm-dev libx11-dev libxrandr-dev libx11-xcb-dev libxshmfence-dev \
-            pkg-config pkgconf glslang-tools libglvnd-dev python3-mako cmake
+          sudo apt-get install -y meson ninja-build pkg-config gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools
+          sudo apt-get install -y libdrm-dev:arm64 libgbm-dev:arm64 libx11-dev:arm64 libxrandr-dev:arm64
           sudo pip install meson==1.4.0
-
+        
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
           git clone --depth 1 https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
@@ -30,6 +30,11 @@ jobs:
           echo "[binaries]" > cross-aarch64.txt
           echo "c = 'aarch64-linux-gnu-gcc'" >> cross-aarch64.txt
           echo "cpp = 'aarch64-linux-gnu-g++'" >> cross-aarch64.txt
+          echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
+          
+          echo "[properties]" >> cross-aarch64.txt
+          echo "pkg_config_libdir = '/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig'" >> cross-aarch64.txt
+          
           echo "[host_machine]" >> cross-aarch64.txt
           echo "system = 'linux'" >> cross-aarch64.txt
           echo "cpu_family = 'aarch64'" >> cross-aarch64.txt
@@ -72,3 +77,4 @@ jobs:
           path: |
             mesa-src/build/src/panfrost/vulkan/libvulkan_panfrost.so
             mesa-src/build/src/panfrost/vulkan/meta.json
+            
