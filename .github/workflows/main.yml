@@ -11,7 +11,7 @@ jobs:
       - name: Installa i compilatori e le dipendenze
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev python3-mako pkg-config cmake libglslang-dev libdrm-dev:arm64 libglvnd-dev:arm64
+          sudo apt-get install -y meson ninja-build gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libdrm-dev glslang-tools libglvnd-dev python3-mako pkg-config cmake
           sudo pip install meson==1.4.0
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
@@ -70,4 +70,3 @@ jobs:
           path: |
             mesa-src/build/src/panfrost/vulkan/libvulkan_panfrost.so
             mesa-src/build/src/panfrost/vulkan/meta.json
-            
