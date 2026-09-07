@@ -10,23 +10,21 @@ jobs:
 
       - name: Installa i compilatori e scarica le librerie target
         run: |
-          # 1. Installiamo solo i compilatori base (quelli non falliscono mai)
+          # 1. Installiamo solo i compilatori base
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build
           sudo pip install meson==1.4.0 pkgconfig
           
-          # 2. Creiamo una cartella isolata per le librerie dello smartphone
-          mkdir -p sysroot/usr/lib/aarch64-linux-gnu
-          mkdir -p sysroot/usr/include
-          mkdir -p sysroot/usr/share/pkgconfig
+          # 2. Creiamo la cartella isolata per le librerie dello smartphone
+          mkdir -p sysroot
           
-          # 3. Scarichiamo direttamente i file .deb estratti dai server ufficiali Ubuntu Ports senza usare apt update
+          # 3. Scarichiamo i file uno alla volta con il nome di output forzato per evitare l'errore 23
+          curl -sL "http://ubuntu.com" -o sysroot/libdrm-dev.deb
+          curl -sL "http://ubuntu.com" -o sysroot/libdrm2.deb
+          curl -sL "http://ubuntu.com" -o sysroot/libgbm-dev.deb
+          curl -sL "http://ubuntu.com" -o sysroot/libgbm1.deb
+          
+          # 4. Estraiamo i pacchetti nella cartella sysroot
           cd sysroot
-          curl -LO http://ubuntu.com
-          curl -LO http://ubuntu.com
-          curl -LO http://ubuntu.com
-          curl -LO http://ubuntu.com
-          
-          # Extrariamo i file direttamente nella nostra cartella di lavoro
           for f in *.deb; do dpkg-deb -x "$f" .; done
           cd ..
 
@@ -42,7 +40,7 @@ jobs:
         run: |
           cd mesa-src
           
-          # Troviamo il percorso assoluto della nostra sysroot finta
+          # Troviamo il percorso assoluto della nostra sysroot locale
           SYSROOT_PATH="${{ github.workspace }}/sysroot"
           
           echo "[binaries]" > cross-aarch64.txt
@@ -51,7 +49,7 @@ jobs:
           echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
           
           echo "[properties]" >> cross-aarch64.txt
-          # Forziamo Meson a leggere SOLO i nostri file pkgconfig appena scaricati, ignorando il sistema
+          # Forziamo Meson a guardare solo la nostra cartella locale
           echo "pkg_config_libdir = '$SYSROOT_PATH/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT_PATH/usr/share/pkgconfig'" >> cross-aarch64.txt
           echo "sys_root = '$SYSROOT_PATH'" >> cross-aarch64.txt
           
@@ -61,9 +59,9 @@ jobs:
           echo "cpu = 'armv8-a'" >> cross-aarch64.txt
           echo "endian = 'little'" >> cross-aarch64.txt
 
-          # Compiliamo puntando alla cartella locale passandogli i flag di inclusione corretti
-          export CFLAGS="-I$SYSROOT_PATH/usr/include"
-          export CPPFLAGS="-I$SYSROOT_PATH/usr/include"
+          # Passiamo le variabili d'ambiente per dire al compilatore dove trovare gli header (.h) di libdrm
+          export CFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
+          export CPPFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
           export LDFLAGS="-L$SYSROOT_PATH/usr/lib/aarch64-linux-gnu"
           
           meson setup build/ --cross-file cross-aarch64.txt -Dvulkan-drivers=panfrost -Dgallium-drivers= -Dplatforms=android
