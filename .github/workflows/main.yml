@@ -16,7 +16,8 @@ jobs:
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
-          git clone --depth 1 https://freedesktop.org mesa-src
+          # Usiamo il mirror ufficiale interno a GitHub così non usciamo dai loro server e azzeriamo l'errore 418
+          git clone --depth 1 https://github.com mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
