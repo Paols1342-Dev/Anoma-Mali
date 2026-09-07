@@ -22,11 +22,14 @@ jobs:
 
       - name: Scarica sorgenti
         run: |
-         A="https://github.com"
-         B="/mesa3d/mesa/archive/refs/heads/main.zip"
-         curl -L "${A}${B}" -o mesa.zip
-         unzip -q mesa.zip
-         mv mesa-main mesa-src
+         A="https://x-access-token:${{ github.token }}@github.com"
+         B="/mesa3d/mesa.git"
+         git clone --depth 1 "${A}${B}" mesa-src
+          
+         
+         
+         
+         
 
         
       - name: Sblocca codice
