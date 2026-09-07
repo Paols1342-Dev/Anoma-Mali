@@ -11,14 +11,15 @@ jobs:
       - name: Installa i compilatori e il Sysroot ARM64 ufficiale
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config unzip
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Scarica i sorgenti Mesa senza Git
+      - name: Scarica i sorgenti Mesa stabili e leggeri
         run: |
-          curl -L "https://github.com" -o mesa.zip
-          unzip -q mesa.zip
-          mv mesa-main mesa-src
+          # Scarichiamo la release ufficiale tar.gz stabile invece dello ZIP dinamico
+          curl -L "https://mesa3d.org" -o mesa.tar.xz
+          tar -xf mesa.tar.xz
+          mv mesa-24.0.0 mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
