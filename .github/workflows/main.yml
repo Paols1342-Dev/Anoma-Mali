@@ -1,57 +1,73 @@
-name: Compila Mesa Sbloccato per Mali-G52
+name: Compila Mesa Mali-G52
 on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Controlla i file del tuo repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Installa i compilatori e il Sysroot ARM64 ufficiale
+      - name: Strumenti build
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu \
+            glslang-tools \
+            ninja-build \
+            pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
       - name: Scarica sorgenti
-        uses: actions/checkout@v4
-        with:
-          repository: 'mesa3d/mesa'
-          path: 'mesa-src'
-          depth: 1
-
-      - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
-          cp panvk_device.c mesa-src/src/panfrost/vulkan/panvk_device.c
+          # Usiamo tarball diretto diviso su più righe corte
+          URL="https://github.com"
+          URL="${URL}/mesa3d/mesa"
+          URL="${URL}/tarball/main"
+          
+          mkdir mesa-src
+          curl -sL "$URL" -o mesa.tar.gz
+          tar -xzf mesa.tar.gz -C mesa-src --strip-components=1
 
-      - name: Configura e Compila il driver (.so)
+      - name: Sblocca codice
+        run: |
+          SRC="mesa-src/src/panfrost/vulkan"
+          cp panvk_device.c $SRC/panvk_device.c
+
+      - name: Compila driver
         run: |
           cd mesa-src
+          ROOT="/usr/aarch64-linux-gnu"
           
-          SYSROOT_PATH="/usr/aarch64-linux-gnu"
+          echo "[binaries]" > cross.txt
+          echo "c = 'aarch64-linux-gnu-gcc'" >> cross.txt
+          echo "cpp = 'aarch64-linux-gnu-g++'" >> cross.txt
+          echo "pkg-config = 'pkg-config'" >> cross.txt
           
-          echo "[binaries]" > cross-aarch64.txt
-          echo "c = 'aarch64-linux-gnu-gcc'" >> cross-aarch64.txt
-          echo "cpp = 'aarch64-linux-gnu-g++'" >> cross-aarch64.txt
-          echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
+          echo "[properties]" >> cross.txt
+          echo "pkg_config_libdir = '$ROOT/lib/pkgconfig'" >> cross.txt
+          echo "sys_root = '$ROOT'" >> cross.txt
           
-          echo "[properties]" >> cross-aarch64.txt
-          echo "pkg_config_libdir = '$SYSROOT_PATH/lib/pkgconfig'" >> cross-aarch64.txt
-          echo "sys_root = '$SYSROOT_PATH'" >> cross-aarch64.txt
+          echo "[host_machine]" >> cross-txt
+          echo "system = 'linux'" >> cross.txt
+          echo "cpu_family = 'aarch64'" >> cross.txt
+          echo "cpu = 'armv8-a'" >> cross.txt
+          echo "endian = 'little'" >> cross.txt
           
-          echo "[host_machine]" >> cross-aarch64.txt
-          echo "system = 'linux'" >> cross-aarch64.txt
-          echo "cpu_family = 'aarch64'" >> cross-aarch64.txt
-          echo "cpu = 'armv8-a'" >> cross-aarch64.txt
-          echo "endian = 'little'" >> cross-aarch64.txt
+          DRV="-Dvulkan-drivers=panfrost"
+          OPT="-Dgallium-drivers= -Dplatforms=android"
+          
+          meson setup build/ --cross-file cross.txt $DRV $OPT
+          
+          OUT="src/panfrost/vulkan/libvulkan_panfrost.so"
+          ninja -C build/ $OUT
 
-          meson setup build/ --cross-file cross-aarch64.txt -Dvulkan-drivers=panfrost -Dgallium-drivers= -Dplatforms=android
-          ninja -C build/ src/panfrost/vulkan/libvulkan_panfrost.so
-
-      - name: Genera automaticamente il file meta.json (Logica Batch)
+      - name: Genera JSON
         run: |
-          cd mesa-src/build/src/panfrost/vulkan/
+          CDIR="mesa-src/build/src/panfrost/vulkan"
+          cd $CDIR
+          
           echo '{' > meta.json
           echo '  "schema_version": 1,' >> meta.json
           echo '  "name": "Panfrost Mesa Devel",' >> meta.json
@@ -75,7 +91,7 @@ jobs:
           echo '  ]' >> meta.json
           echo '}' >> meta.json
 
-      - name: Carica il pacchetto pronto da scaricare (Driver + JSON)
+      - name: Carica Driver sbloccato
         uses: actions/upload-artifact@v4
         with:
           name: driver-panvk-sbloccato
