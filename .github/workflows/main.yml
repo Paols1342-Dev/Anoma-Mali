@@ -13,11 +13,18 @@ jobs:
           sudo apt-get update -y && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Estrai le librerie precaricate
+      - name: Scarica ed Estrai le librerie target (Opzione 2)
         run: |
           mkdir -p sysroot
-          # Estrae i pacchetti .deb presenti nella cartella deps del tuo repository
-          for f in deps/*.deb; do dpkg-deb -x "$f" sysroot; done
+          
+          # Scarichiamo i file .deb reali dai mirror stabili del Kernel Linux
+          wget -q https://kernel.org
+          wget -q https://kernel.org
+          wget -q https://kernel.org
+          wget -q https://kernel.org
+          
+          # Estraiamo tutti i pacchetti scaricati dentro la sysroot locale per Meson
+          for f in *.deb; do dpkg-deb -x "$f" sysroot; done
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
