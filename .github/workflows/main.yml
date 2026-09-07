@@ -8,29 +8,12 @@ jobs:
       - name: Controlla i file del tuo repository
         uses: actions/checkout@v4
 
-      - name: Installa i compilatori base
+      - name: Installa i compilatori e il Sysroot ARM64 ufficiale
         run: |
-          sudo apt-get update -y && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config wget curl
+          sudo apt-get update -y
+          # Installiamo i compilatori e l'ambiente completo multiarch-support nativo di Ubuntu
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
-
-      - name: Scarica ed Estrai le librerie target (Forzato)
-        run: |
-          mkdir -p sysroot
-          
-          # Usiamo curl simulando un browser reale (User-Agent) per evitare rifiuti dal server
-          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libdrm2.deb
-          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libdrm-dev.deb
-          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libgbm1.deb
-          curl -H "User-Agent: Mozilla/5.0" -L "https://kernel.org" -o libgbm-dev.deb
-          
-          # Controlliamo se i file esistono davvero prima di estrarre
-          ls -l *.deb
-          
-          # Estraiamo tutti i pacchetti scaricati dentro la sysroot locale per Meson
-          dpkg-deb -x libdrm2.deb sysroot
-          dpkg-deb -x libdrm-dev.deb sysroot
-          dpkg-deb -x libgbm1.deb sysroot
-          dpkg-deb -x libgbm-dev.deb sysroot
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
@@ -44,7 +27,8 @@ jobs:
         run: |
           cd mesa-src
           
-          SYSROOT_PATH="${{ github.workspace }}/sysroot"
+          # Usiamo le librerie di sviluppo incluse direttamente nel cross-compilatore GCC
+          SYSROOT_PATH="/usr/aarch64-linux-gnu"
           
           echo "[binaries]" > cross-aarch64.txt
           echo "c = 'aarch64-linux-gnu-gcc'" >> cross-aarch64.txt
@@ -52,7 +36,7 @@ jobs:
           echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
           
           echo "[properties]" >> cross-aarch64.txt
-          echo "pkg_config_libdir = '$SYSROOT_PATH/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT_PATH/usr/share/pkgconfig'" >> cross-aarch64.txt
+          echo "pkg_config_libdir = '$SYSROOT_PATH/lib/pkgconfig'" >> cross-aarch64.txt
           echo "sys_root = '$SYSROOT_PATH'" >> cross-aarch64.txt
           
           echo "[host_machine]" >> cross-aarch64.txt
@@ -61,10 +45,6 @@ jobs:
           echo "cpu = 'armv8-a'" >> cross-aarch64.txt
           echo "endian = 'little'" >> cross-aarch64.txt
 
-          export CFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
-          export CPPFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
-          export LDFLAGS="-L$SYSROOT_PATH/usr/lib/aarch64-linux-gnu"
-          
           meson setup build/ --cross-file cross-aarch64.txt -Dvulkan-drivers=panfrost -Dgallium-drivers= -Dplatforms=android
           ninja -C build/ src/panfrost/vulkan/libvulkan_panfrost.so
 
