@@ -11,20 +11,14 @@ jobs:
       - name: Installa i compilatori e il Sysroot ARM64 ufficiale
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config unzip
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
+      - name: Scarica i sorgenti Mesa senza Git
         run: |
-          # Ricostruiamo il link a pezzetti minuscoli a prova di browser mobile
-          printf "https://" > link.txt
-          printf "github.com" >> link.txt
-          printf "/mesa3d" >> link.txt
-          printf "/mesa.git" >> link.txt
-          
-          # Leggiamo il link ricomposto in totale sicurezza
-          URL=$(cat link.txt)
-          git clone --depth 1 "$URL" mesa-src
+          curl -L "https://github.com" -o mesa.zip
+          unzip -q mesa.zip
+          mv mesa-main mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
