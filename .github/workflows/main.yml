@@ -12,13 +12,14 @@ jobs:
         run: |
           sudo dpkg --add-architecture arm64
           
-          # Rimuove la configurazione originale di Ubuntu per evitare conflitti
-          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+          # Svuota e ripulisce completamente TUTTI i vecchi file di configurazione dei repository
+          sudo rm -f /etc/apt/sources.list
+          sudo rm -f /etc/apt/sources.list.d/*
           
-          # Configura i repository per PC (amd64) sui server standard
+          # Configura da zero il file unico per PC (amd64) sui server standard
           echo -e "Types: deb\nURIs: http://ubuntu.com http://ubuntu.com\nSuites: noble noble-updates noble-backports noble-security\nComponents: main universe restricted multiverse\nArchitectures: amd64" | sudo tee /etc/apt/sources.list.d/amd64.sources
           
-          # Configura i repository per lo Smartphone (arm64) sui server Ports
+          # Configura da zero il file unico per lo Smartphone (arm64) sui server Ports
           echo -e "Types: deb\nURIs: http://ubuntu.com\nSuites: noble noble-updates noble-backports noble-security\nComponents: main universe restricted multiverse\nArchitectures: arm64" | sudo tee /etc/apt/sources.list.d/arm64.sources
           
           sudo apt-get update -y
