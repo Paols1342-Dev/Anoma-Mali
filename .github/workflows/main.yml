@@ -14,12 +14,15 @@ jobs:
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
 
-      - name: Scarica Mesa via Tarball Diretto
+      - name: Scarica i sorgenti Mesa senza blocchi dello smartphone
         run: |
-          # Scarichiamo il pacchetto sorgente pre-confezionato direttamente senza passare da Git
-          curl -sL https://github.com -o mesa.tar.gz
-          mkdir mesa-src
-          tar -xzf mesa.tar.gz -C mesa-src --strip-components=1
+          # Dividiamo il link in pezzi corti per ingannare l'editor del telefono
+          PARTE1="https://github.com"
+          PARTE2="/mesa3d/mesa.git"
+          
+          # Uniamo i pezzi ed eseguiamo il clone in totale sicurezza
+          LINK_COMPLETO="${PARTE1}${PARTE2}"
+          git clone --depth 1 "$LINK_COMPLETO" mesa-src
 
       - name: Sovrascrivi il file con il tuo codice sbloccato
         run: |
