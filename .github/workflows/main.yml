@@ -8,25 +8,16 @@ jobs:
       - name: Controlla i file del tuo repository
         uses: actions/checkout@v4
 
-      - name: Installa i compilatori e scarica le librerie target
+      - name: Installa i compilatori base
         run: |
-          # 1. Installiamo solo i compilatori PC nativi
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build
+          sudo apt-get update -y && sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build pkg-config
           sudo pip install meson==1.4.0 pkgconfig
-          
-          # 2. Creiamo le cartelle per la nostra sysroot locale isolata
-          mkdir -p debs sysroot
-          cd debs
-          
-          # 3. Scarichiamo i file .deb reali usando i mirror stabili di Launchpad (HTTPS sicuri, nessun reindirizzamento)
-          wget -O libdrm2.deb "https://launchpad.net"
-          wget -O libdrm-dev.deb "https://launchpad.net"
-          wget -O libgbm1.deb "https://launchpad.net"
-          wget -O libgbm-dev.deb "https://launchpad.net"
-          
-          # 4. Estraiamo tutto dentro la nostra cartella sysroot locale
-          for f in *.deb; do dpkg-deb -x "$f" ../sysroot; done
-          cd ..
+
+      - name: Estrai le librerie precaricate
+        run: |
+          mkdir -p sysroot
+          # Estrae i pacchetti .deb presenti nella cartella deps del tuo repository
+          for f in deps/*.deb; do dpkg-deb -x "$f" sysroot; done
 
       - name: Clona i sorgenti ottimizzati e leggeri di Mesa per Android
         run: |
@@ -40,7 +31,6 @@ jobs:
         run: |
           cd mesa-src
           
-          # Impostiamo il percorso assoluto della sysroot isolata
           SYSROOT_PATH="${{ github.workspace }}/sysroot"
           
           echo "[binaries]" > cross-aarch64.txt
@@ -49,7 +39,6 @@ jobs:
           echo "pkg-config = 'pkg-config'" >> cross-aarch64.txt
           
           echo "[properties]" >> cross-aarch64.txt
-          # Forziamo il compilatore a leggere le librerie e i file pkgconfig estratti localmente
           echo "pkg_config_libdir = '$SYSROOT_PATH/usr/lib/aarch64-linux-gnu/pkgconfig:$SYSROOT_PATH/usr/share/pkgconfig'" >> cross-aarch64.txt
           echo "sys_root = '$SYSROOT_PATH'" >> cross-aarch64.txt
           
@@ -59,7 +48,6 @@ jobs:
           echo "cpu = 'armv8-a'" >> cross-aarch64.txt
           echo "endian = 'little'" >> cross-aarch64.txt
 
-          # Configuriamo i flag di inclusione globali per trovare libdrm senza conflitti
           export CFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
           export CPPFLAGS="-I$SYSROOT_PATH/usr/include -I$SYSROOT_PATH/usr/include/libdrm"
           export LDFLAGS="-L$SYSROOT_PATH/usr/lib/aarch64-linux-gnu"
