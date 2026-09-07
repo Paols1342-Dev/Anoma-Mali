@@ -10,7 +10,7 @@ jobs:
 
       - name: Installa i compilatori e scarica le librerie target
         run: |
-          # 1. Installiamo solo i compilatori PC nativi (questi non falliscono mai)
+          # 1. Installiamo solo i compilatori PC nativi
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu glslang-tools ninja-build
           sudo pip install meson==1.4.0 pkgconfig
           
@@ -18,11 +18,11 @@ jobs:
           mkdir -p debs sysroot
           cd debs
           
-          # 3. Scarichiamo i file .deb reali e immutabili direttamente con wget (NO APT = NO ERRORE 100)
-          wget http://ubuntu.com
-          wget http://ubuntu.com
-          wget http://ubuntu.com
-          wget http://ubuntu.com
+          # 3. Scarichiamo i file .deb reali usando i mirror stabili di Launchpad (HTTPS sicuri, nessun reindirizzamento)
+          wget -O libdrm2.deb "https://launchpad.net"
+          wget -O libdrm-dev.deb "https://launchpad.net"
+          wget -O libgbm1.deb "https://launchpad.net"
+          wget -O libgbm-dev.deb "https://launchpad.net"
           
           # 4. Estraiamo tutto dentro la nostra cartella sysroot locale
           for f in *.deb; do dpkg-deb -x "$f" ../sysroot; done
