@@ -17,87 +17,65 @@ jobs:
             glslang-tools \
             ninja-build \
             pkg-config
-            sudo pip install meson==1.4.0 pkgconfig
-                    
-
-      - name: Scarica sorgenti
-        run: |
-         A="https://x-access-token:${{ github.token }}@github.com"
-         B="/mesa3d/mesa.git"
-         git clone --depth 1 "${A}${B}" mesa-src
-          
-         
-         
-         
-         
-
-        
-      - name: Sblocca codice
-        run: |
-          SRC="mesa-src/src/panfrost/vulkan"
-          cp panvk_device.c $SRC/panvk_device.c
+          sudo pip install meson==1.4.0 pkgconfig
 
       - name: Compila driver
         run: |
-          cd mesa-src
           ROOT="/usr/aarch64-linux-gnu"
-          
           echo "[binaries]" > cross.txt
           echo "c = 'aarch64-linux-gnu-gcc'" >> cross.txt
           echo "cpp = 'aarch64-linux-gnu-g++'" >> cross.txt
           echo "pkg-config = 'pkg-config'" >> cross.txt
-          
           echo "[properties]" >> cross.txt
           echo "pkg_config_libdir = '$ROOT/lib/pkgconfig'" >> cross.txt
           echo "sys_root = '$ROOT'" >> cross.txt
-          
           echo "[host_machine]" >> cross.txt
           echo "system = 'linux'" >> cross.txt
           echo "cpu_family = 'aarch64'" >> cross.txt
           echo "cpu = 'armv8-a'" >> cross.txt
           echo "endian = 'little'" >> cross.txt
-          
-          DRV="-Dvulkan-drivers=panfrost"
-          OPT="-Dgallium-drivers= -Dplatforms=android"
-          
-          meson setup build/ --cross-file cross.txt $DRV $OPT
-          
+          meson setup build/ --cross-file cross.txt \
+            -Dplatforms=android \
+            -Dvulkan-drivers=panfrost \
+            -Dgallium-drivers=panfrost \
+            -Dbuildtype=release
           OUT="src/panfrost/vulkan/libvulkan_panfrost.so"
           ninja -C build/ $OUT
 
       - name: Genera JSON
         run: |
-          CDIR="mesa-src/build/src/panfrost/vulkan"
+          CDIR="build/src/panfrost/vulkan"
           cd $CDIR
-          
-          echo '{' > meta.json
-          echo '  "schema_version": 1,' >> meta.json
-          echo '  "name": "Panfrost Mesa Devel",' >> meta.json
-          echo '  "version": "26.3.0",' >> meta.json
-          echo '  "description": "Custom compiled Panfrost & PanVK driver for Mali-G52",' >> meta.json
-          echo '  "author": "Paolo1342-Dev",' >> meta.json
-          echo '  "api": "vulkan",' >> meta.json
-          echo '  "driverFile": "libvulkan_panfrost.so",' >> meta.json
-          echo '  "gpuVendor": "arm",' >> meta.json
-          echo '  "customDriverFeatures": [' >> meta.json
-          echo '    "VK_KHR_timeline_semaphore",' >> meta.json
-          echo '    "VK_EXT_descriptor_indexing",' >> meta.json
-          echo '    "VK_EXT_robustness2",' >> meta.json
-          echo '    "VK_EXT_vertex_attribute_divisor",' >> meta.json
-          echo '    "VK_EXT_conditional_rendering",' >> meta.json
-          echo '    "VK_EXT_conservative_rasterization",' >> meta.json
-          echo '    "VK_EXT_extended_dynamic_state",' >> meta.json
-          echo '    "VK_EXT_extended_dynamic_state2",' >> meta.json
-          echo '    "VK_EXT_shader_demote_to_helper_invocation",' >> meta.json
-          echo '    "VK_KHR_shader_float16_int8"' >> meta.json
-          echo '  ]' >> meta.json
-          echo '}' >> meta.json
+          cat << 'EOF' > meta.json
+          {
+            "schema_version": 1,
+            "name": "Panfrost Mesa Devel",
+            "version": "26.3.0",
+            "description": "Custom compilation with unlocked extensions",
+            "author": "Paolo1342-Dev",
+            "api": "vulkan",
+            "driverFile": "libvulkan_panfrost.so",
+            "gpuVendor": "arm",
+            "customDriverFeatures": [
+              "VK_KHR_timeline_semaphore",
+              "VK_EXT_descriptor_indexing",
+              "VK_EXT_robustness2",
+              "VK_EXT_vertex_attribute_divisor",
+              "VK_EXT_conditional_rendering",
+              "VK_EXT_conservative_rasterization",
+              "VK_EXT_extended_dynamic_state",
+              "VK_EXT_extended_dynamic_state2",
+              "VK_EXT_shader_demote_to_helper_invocation",
+              "VK_KHR_shader_float16_int8"
+            ]
+          }
+          EOF
 
       - name: Carica Driver sbloccato
         uses: actions/upload-artifact@v4
         with:
           name: driver-panvk-sbloccato
           path: |
-            mesa-src/build/src/panfrost/vulkan/libvulkan_panfrost.so
-            mesa-src/build/src/panfrost/vulkan/meta.json
+            build/src/panfrost/vulkan/libvulkan_panfrost.so
+            build/src/panfrost/vulkan/meta.json
             
