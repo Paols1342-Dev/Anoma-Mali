@@ -21,12 +21,12 @@ jobs:
 
       - name: Scarica sorgenti Mesa
         run: |
-          git clone --depth 1 https://freedesktop.org mesa-src
+          # Usiamo il mirror ufficiale di GitHub per evitare i blocchi di freedesktop.org
+          git clone --depth 1 https://github.com mesa-src
 
       - name: Sblocca codice
         run: |
           SRC="mesa-src/src/panfrost/vulkan"
-          # Prende il panvk_device.c che hai nella root della tua repo e lo mette dentro Mesa
           cp ./panvk_device.c "$SRC/panvk_device.c"
 
       - name: Compila driver
