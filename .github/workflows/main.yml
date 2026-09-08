@@ -22,6 +22,8 @@ jobs:
       - name: Compila driver
         run: |
           ROOT="/usr/aarch64-linux-gnu"
+          MESA_DIR=$(dirname $(find . -name "meson.build" | head -n 1))
+          cd "$MESA_DIR"
           echo "[binaries]" > cross.txt
           echo "c = 'aarch64-linux-gnu-gcc'" >> cross.txt
           echo "cpp = 'aarch64-linux-gnu-g++'" >> cross.txt
@@ -41,11 +43,11 @@ jobs:
             -Dbuildtype=release
           OUT="src/panfrost/vulkan/libvulkan_panfrost.so"
           ninja -C build/ $OUT
+          echo "MESA_BUILD_PATH=${PWD}/build/src/panfrost/vulkan" >> $GITHUB_ENV
 
       - name: Genera JSON
         run: |
-          CDIR="build/src/panfrost/vulkan"
-          cd $CDIR
+          cd "$MESA_BUILD_PATH"
           cat << 'EOF' > meta.json
           {
             "schema_version": 1,
@@ -76,6 +78,6 @@ jobs:
         with:
           name: driver-panvk-sbloccato
           path: |
-            build/src/panfrost/vulkan/libvulkan_panfrost.so
-            build/src/panfrost/vulkan/meta.json
+            ${{ env.MESA_BUILD_PATH }}/libvulkan_panfrost.so
+            ${{ env.MESA_BUILD_PATH }}/meta.json
             
